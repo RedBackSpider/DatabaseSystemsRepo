@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.io.File;
+import java.util.StringTokenizer;
+import java.util.Iterator;
 
 public class App
 {
@@ -35,7 +37,28 @@ public class App
 	    while(sc.hasNextLine())
 	    {
 		String line = sc.nextLine();
+		StringTokenizer st = new StringTokenizer(line, "\t");
+		int tokenCount = 0;
+		ArrayList<String> linetokens = new ArrayList<String>();
+		while(st.hasMoreTokens())
+		{
+		    String token = st.nextToken();
+		    if(token.charAt(0) != '"' && token.charAt(token.length() - 1) != '"' && token.length() > 1)
+		    {
+			token = "\"" + token + "\"";
+		    }
+		    linetokens.add(token);
+		    System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
+		    tokenCount++;
+		}
+		System.out.println("Number of Tokens:" + linetokens.size());
+		Iterator itr = linetokens.iterator();
+		while(itr.hasNext())
+		{
+		    System.out.print(itr.next()+",");
+		}
 		System.out.println(line);
+		System.out.println();
 	    }
 	}
 	catch (Exception e)
