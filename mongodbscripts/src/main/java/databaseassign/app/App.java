@@ -1,8 +1,4 @@
 package databaseassign.app;
-/**
- * Hello world!
- *
- */
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
@@ -23,8 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.io.File;
+import java.lang.StringBuilder;
 import java.util.StringTokenizer;
 import java.util.Iterator;
+import java.io.FileWriter;
 
 public class App
 {
@@ -32,8 +30,11 @@ public class App
     {
 	try
 	{
-	    String csvFile1 = "/home/ec2-user/test.csv";
+	    String csvFile1 = "/home/ec2-user/BUSINESS_NAMES_201803.csv";
 	    Scanner sc = new Scanner(new File(csvFile1));
+	    String csvFile2 = "/home/ec2-user/BUSINESS_NAMES_201803-1.csv";	    
+	    FileWriter writer = new FileWriter(csvFile2);
+	    writer.append(sc.nextLine());
 	    while(sc.hasNextLine())
 	    {
 		String line = sc.nextLine();
@@ -48,18 +49,31 @@ public class App
 			token = "\"" + token + "\"";
 		    }
 		    linetokens.add(token);
-		    System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
+		    //System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
 		    tokenCount++;
 		}
-		System.out.println("Number of Tokens:" + linetokens.size());
-		Iterator itr = linetokens.iterator();
+		//System.out.println("Number of Tokens:" + linetokens.size());
+		StringBuilder writeline = new StringBuilder();
+		Iterator<String> itr = linetokens.iterator();
 		while(itr.hasNext())
 		{
-		    System.out.print(itr.next()+",");
+		    String value = itr.next();
+		    if(itr.hasNext())	
+		    {
+			writeline.append(value+",");
+		    }
+		    else	
+		    {
+			writeline.append(value+"\n");
+		    }
 		}
-		System.out.println(line);
-		System.out.println();
+		
+		//System.out.println(writeline.toString());
+		//System.out.println();
+		writer.append(writeline.toString());
 	    }
+	    writer.flush();
+	    writer.close();
 	}
 	catch (Exception e)
 	{
