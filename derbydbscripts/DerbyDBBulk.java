@@ -10,7 +10,8 @@ import java.util.Properties;
 import java.io.File;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-
+import java.lang.Integer;
+import java.io.FileNotFoundException;
 
 public class DerbyDBBulk
 {
@@ -57,10 +58,8 @@ public class DerbyDBBulk
 		System.out.println("Created table locale");
 		//s.execute("call SYSCS_UTIL.SYSCS_SET_RUNTIMESTATISTICS(1)");
 		//s.execute("call SYSCS_UTIL.SYSCS_SET_STATISTICS_TIMING(1)");
-		psInsert = conn.prepareStatement(
-						 "insert into location values (?, ?, ?)");
+		psInsert = conn.prepareStatement("insert into locale values (?, ?, ?)");
 		statements.add(psInsert);
-
 		String csvFile1 = "/home/ec2-user/test.csv";
 		Scanner sc = new Scanner(new File(csvFile1));
 		while(sc.hasNextLine())
@@ -69,18 +68,15 @@ public class DerbyDBBulk
 		    StringTokenizer st = new StringTokenizer(line, "\t");
 		    int id = 0;
 		    ArrayList<String> linetokens = new ArrayList<String>();
+		    System.out.println("There");
 		    while(st.hasMoreTokens())
 		    {
 			String token = st.nextToken();
-			if(token.charAt(0) != '"' && token.charAt(token.length() - 1) != '"' && token.length() > 1)
-			{
-			    token = "\"" + token + "\"";
-			}
+			token = token.replaceAll("^\"|\"$", "");
 			linetokens.add(token);
 			//System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
-			tokenCount++;
 		    }
-		    id = Integer.parseString(linetokens.get(0));
+		    id = Integer.parseInt(linetokens.get(0));
 		    //System.out.println("Number of Tokens:" + linetokens.size());
 		    System.out.println(id);
 		    psInsert.setInt(1, id);
@@ -186,7 +182,11 @@ public class DerbyDBBulk
         catch (SQLException sqle)
         {
             printSQLException(sqle);
-        } 
+        }
+	catch (FileNotFoundException e) 
+	{
+	    e.printStackTrace();
+	}
 	finally {
             // release all open resources to avoid unnecessary memory usage
 
