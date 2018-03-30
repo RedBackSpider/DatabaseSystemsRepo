@@ -1,0 +1,19 @@
+----------------------------------------------------------------
+Thu Mar 29 13:21:13 UTC 2018:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.1.0 - (1808820): instance a816c00e-0162-71eb-5f60-000000c72f08 
+on database directory /home/ec2-user/databasesystemsrepo/derbydbscripts/derbyDB with class loader sun.misc.Launcher$AppClassLoader@61bbe9ba 
+Loaded from file:/opt/Apache/db-derby-10.14.1.0-bin/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_161-b14
+user.dir=/home/ec2-user/databasesystemsrepo/derbydbscripts
+os.name=Linux
+os.arch=amd64
+os.version=4.9.76-3.78.amzn1.x86_64
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Thu Mar 29 13:23:06 UTC 2018: Shutting down Derby engine
+----------------------------------------------------------------
+Thu Mar 29 13:23:06 UTC 2018:
+Shutting down instance a816c00e-0162-71eb-5f60-000000c72f08 on database directory /home/ec2-user/databasesystemsrepo/derbydbscripts/derbyDB with class loader sun.misc.Launcher$AppClassLoader@61bbe9ba 
+----------------------------------------------------------------
