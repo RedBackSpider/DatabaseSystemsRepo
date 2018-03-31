@@ -2,6 +2,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -34,11 +35,10 @@ public class DerbyDBBulk
         Connection conn = null;
         ArrayList<Statement> statements = new ArrayList<Statement>(); // list of Statements, PreparedStatements
         PreparedStatement psInsert;
-        PreparedStatement psUpdate;
         Statement s;
-	Statement rts; // Statement to call for Runtimestatistics
-	ResultSet rtsrs; // Result set from Runtime Statistics
-        ResultSet rs = null;
+	ResultSet rtsrs = null; // Result set from Runtime Statistics
+        ResultSetMetaData rtsrsmd = null;
+	ResultSet rs = null;
         try
 	    {
 		Properties props = new Properties(); // connection properties
@@ -58,35 +58,29 @@ public class DerbyDBBulk
 		
 		s.execute("create table asicnames(id int, bntype varchar(14), bnname varchar(200), bnstatus varchar(12), bnreg varchar(10), bncancel varchar(10), bnrenew varchar(10), bnstatenum varchar(10), bnstatereg varchar(3), bnabn bigint)");
 		System.out.println("Created table asicnames");
-		//s.execute("call SYSCS_UTIL.SYSCS_SET_RUNTIMESTATISTICS(1)");
-		//s.execute("call SYSCS_UTIL.SYSCS_SET_STATISTICS_TIMING(1)");
+		s.execute("call SYSCS_UTIL.SYSCS_SET_RUNTIMESTATISTICS(1)");
+		s.execute("call SYSCS_UTIL.SYSCS_SET_STATISTICS_TIMING(1)");
 		psInsert = conn.prepareStatement("insert into asicnames values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		statements.add(psInsert);
 		int idcount = 0;
 		String csvFile1 = "/home/ec2-user/BUSINESS_NAMES_201803.csv";
 		Scanner sc = new Scanner(new File(csvFile1));
 		sc.nextLine();
-		//while(sc.hasNextLine())
-		//{
+		int count = 0;
+		while(sc.hasNextLine())
+		{
+		    count++;
 		    String line = sc.nextLine();
 		    StringTokenizer st = new StringTokenizer(line, "\t");
 		    int id = 0;
 		    int tokenCount = 0;
-		    ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t")));
-		    /*while(st.hasMoreTokens())
-		    {
-			String token = st.nextToken();
-			token = token.replaceAll("^\"|\"$", "");
-			linetokens.add(token);
-			tokenCount++;
-			System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
-			}*/
-		    System.out.println(linetokens.size());
-		    System.out.println(linetokens.get(0) + linetokens.get(1) + linetokens.get(2) + linetokens.get(3));
-		    System.out.println(linetokens.get(4) + " " + linetokens.get(5) + " "  + linetokens.get(6));
+		    ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
 		    idcount++;
-		    long abn = Long.parseLong(linetokens.get(8));
-		    //System.out.println("Number of Tokens:" + linetokens.size());
+		    long abn = 0;
+		    if(linetokens.get(8).length() != 0)
+		    {
+			abn = Long.parseLong(linetokens.get(8));
+		    }
 		    psInsert.setInt(1, idcount);
 		    psInsert.setString(2, linetokens.get(0));
 		    psInsert.setString(3, linetokens.get(1));
@@ -96,36 +90,12 @@ public class DerbyDBBulk
 		    psInsert.setString(7, linetokens.get(5));
 		    psInsert.setString(8, linetokens.get(6));
 		    psInsert.setString(9, linetokens.get(7));
-		    psInsert.setLong(10, abn);
+		    if(abn != 0)
+		    {
+			psInsert.setLong(10, abn);
+		    }
 		    psInsert.executeUpdate();
-		    //}
-		/*
-		psInsert.setInt(1, 1956);
-		psInsert.setString(2, "Webster St.");
-		psInsert.executeUpdate();
-		System.out.println("Inserted 1956 Webster");
-
-		psInsert.setInt(1, 1910);
-		psInsert.setString(2, "Union St.");
-		psInsert.executeUpdate();
-		System.out.println("Inserted 1910 Union");
-		*/
-		//psUpdate = conn.prepareStatement(
-		//					 "update location set num=?, addr=? where num=?");
-		//statements.add(psUpdate);
-
-		//psUpdate.setInt(1, 180);
-		//psUpdate.setString(2, "Grand Ave.");
-		//psUpdate.setInt(3, 1956);
-		//psUpdate.executeUpdate();
-		//System.out.println("Updated 1956 Webster to 180 Grand");
-
-		//psUpdate.setInt(1, 300);
-		//psUpdate.setString(2, "Lakeshore Ave.");
-		//psUpdate.setInt(3, 180);
-		//psUpdate.executeUpdate();
-		//System.out.println("Updated 180 Grand to 300 Lakeshore");
-
+		}
 		//rs = s.executeQuery(
 		//		    "SELECT num, addr FROM location ORDER BY num");
 
@@ -171,9 +141,22 @@ public class DerbyDBBulk
             // delete the table
             //s.execute("drop table location");
             //System.out.println("Dropped table location");
-	    //rs = s.executeQuery("VALUES SYSCS_UTIL.SYSCS_GET_RUNTIMESTATISTICS();");
+		
+	    rtsrs = s.executeQuery("VALUES SYSCS_UTIL.SYSCS_GET_RUNTIMESTATISTICS()");
+	    rtsrsmd = rtsrs.getMetaData();
+	    int columnsNumber = rtsrsmd.getColumnCount();
+	    while (rtsrs.next()) {
+		for (int i = 1; i <= columnsNumber; i++) {
+		    if (i > 1) System.out.print(",  ");
+		    String columnValue = rtsrs.getString(i);
+		    System.out.print(columnValue + " " + rtsrsmd.getColumnName(i));
+		}
+		System.out.println("");
+	    }
+            s.execute("call SYSCS_UTIL.SYSCS_SET_RUNTIMESTATISTICS(0)");
+	    s.execute("call SYSCS_UTIL.SYSCS_SET_STATISTICS_TIMING(0)");	
 	    
-            conn.commit();
+	    conn.commit();
             System.out.println("Committed the transaction");
 
             if (framework.equals("embedded"))
@@ -211,6 +194,15 @@ public class DerbyDBBulk
                     rs.close();
                     rs = null;
                 }
+		if (rtsrs != null)
+		{
+		    rtsrs.close();
+		    rtsrs = null;
+		}
+		if (rtsrsmd != null)
+		{
+		    rtsrsmd = null;
+		}
             } catch (SQLException sqle) {
                 printSQLException(sqle);
             }
