@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 import java.lang.Integer;
+import java.lang.Long;
+import java.util.Arrays;
 import java.io.FileNotFoundException;
 
 public class DerbyDBBulk
@@ -54,36 +56,49 @@ public class DerbyDBBulk
 		s = conn.createStatement();
 		statements.add(s);
 		
-		s.execute("create table locale(id int, code varchar(3), name varchar(40))");
-		System.out.println("Created table locale");
+		s.execute("create table asicnames(id int, bntype varchar(14), bnname varchar(200), bnstatus varchar(12), bnreg varchar(10), bncancel varchar(10), bnrenew varchar(10), bnstatenum varchar(10), bnstatereg varchar(3), bnabn bigint)");
+		System.out.println("Created table asicnames");
 		//s.execute("call SYSCS_UTIL.SYSCS_SET_RUNTIMESTATISTICS(1)");
 		//s.execute("call SYSCS_UTIL.SYSCS_SET_STATISTICS_TIMING(1)");
-		psInsert = conn.prepareStatement("insert into locale values (?, ?, ?)");
+		psInsert = conn.prepareStatement("insert into asicnames values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		statements.add(psInsert);
-		String csvFile1 = "/home/ec2-user/test.csv";
+		int idcount = 0;
+		String csvFile1 = "/home/ec2-user/BUSINESS_NAMES_201803.csv";
 		Scanner sc = new Scanner(new File(csvFile1));
-		while(sc.hasNextLine())
-		{
+		sc.nextLine();
+		//while(sc.hasNextLine())
+		//{
 		    String line = sc.nextLine();
 		    StringTokenizer st = new StringTokenizer(line, "\t");
 		    int id = 0;
-		    ArrayList<String> linetokens = new ArrayList<String>();
-		    System.out.println("There");
-		    while(st.hasMoreTokens())
+		    int tokenCount = 0;
+		    ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t")));
+		    /*while(st.hasMoreTokens())
 		    {
 			String token = st.nextToken();
 			token = token.replaceAll("^\"|\"$", "");
 			linetokens.add(token);
-			//System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
-		    }
-		    id = Integer.parseInt(linetokens.get(0));
+			tokenCount++;
+			System.out.println("Number of Tokens left: " + tokenCount + " Token: " + token);
+			}*/
+		    System.out.println(linetokens.size());
+		    System.out.println(linetokens.get(0) + linetokens.get(1) + linetokens.get(2) + linetokens.get(3));
+		    System.out.println(linetokens.get(4) + " " + linetokens.get(5) + " "  + linetokens.get(6));
+		    idcount++;
+		    long abn = Long.parseLong(linetokens.get(8));
 		    //System.out.println("Number of Tokens:" + linetokens.size());
-		    System.out.println(id);
-		    psInsert.setInt(1, id);
-		    psInsert.setString(2, linetokens.get(1));
-		    psInsert.setString(3, linetokens.get(2));
+		    psInsert.setInt(1, idcount);
+		    psInsert.setString(2, linetokens.get(0));
+		    psInsert.setString(3, linetokens.get(1));
+		    psInsert.setString(4, linetokens.get(2));
+		    psInsert.setString(5, linetokens.get(3));
+		    psInsert.setString(6, linetokens.get(4));
+		    psInsert.setString(7, linetokens.get(5));
+		    psInsert.setString(8, linetokens.get(6));
+		    psInsert.setString(9, linetokens.get(7));
+		    psInsert.setLong(10, abn);
 		    psInsert.executeUpdate();
-		}
+		    //}
 		/*
 		psInsert.setInt(1, 1956);
 		psInsert.setString(2, "Webster St.");
