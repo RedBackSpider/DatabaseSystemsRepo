@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.io.ByteArrayOutputStream;
-
+import java.nio.ByteBuffer;
 
 public class dbload
 {
@@ -52,16 +52,16 @@ public class dbload
 	}
 	String outputname = "heap." + ps;
 	ArrayList<TestPage> UnfilledPages = new ArrayList<>();
-	TestPage paged = new TestPage(pagesize);
 	try
 	{
 	    Scanner sc = new Scanner(new File(filename));
 	    DataOutputStream os = new DataOutputStream(new FileOutputStream(outputname));
+	    long startTime = System.currentTimeMillis();
+	    long numOfRecords = 0;
 	    while(sc.hasNextLine())
 	    {
 		String line = sc.nextLine();
 		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
-		System.out.println(linetokens.get(0).length());
 		for(int i = 0; i < linetokens.size(); i++)
 		{
 		    if(linetokens.get(i).charAt(0) == '"')
@@ -73,7 +73,6 @@ public class dbload
 			linetokens.set(i, linetokens.get(i).substring(0,linetokens.get(i).length()-1));
 		    }
 		}
-		System.out.println(linetokens.get(0).length());
 		TestRecord test = new TestRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2));
 		if(test.getByteSize() > pagesize)
 		{
@@ -82,7 +81,6 @@ public class dbload
 		    os.close();
 		    System.exit(0);
 		}
-		System.out.println(linetokens.get(0) + " "  + linetokens.get(1) + " "  +  linetokens.get(2) + " " + test.getByteSize());
 		Iterator<TestPage> iter = UnfilledPages.iterator();
 		boolean inserted = false;
 		while (iter.hasNext() && !inserted)
@@ -101,27 +99,28 @@ public class dbload
 			    return p2.getBytesFilled() - p1.getBytesFilled();
 			}
 		});
-
+		numOfRecords++;
 		
 		/*if(linetokens.get(8).length() != 0)
 		  {
 		      abn = Long.parseLong(linetokens.get(8));
 		  }*/
-		// Token 0 = id
-		// Token 1 = code
-		// Token 2 = country
 	    }
 	    Iterator<TestPage> it = UnfilledPages.iterator();
 	    while(it.hasNext())
 	    {
 		TestPage page = it.next();
 		System.out.println("New Page Bytes:" + page.getBytesFilled());
+		System.out.println("New Page Record Count:" + page.getNumRecords());
 		ArrayList<TestRecord> records = page.getRecords();
 		Iterator<TestRecord> it2 = records.iterator();
 		int pageByteCount = page.getBytesFilled();
 		ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+		long nr = page.getNumRecords();
+	        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		buffer.putLong(nr);
 		byte[] writeBytes = new byte[pagesize];
-		System.out.println(writeBytes.length);
+		bytestream.write(buffer.array());
 		while(it2.hasNext())
 		{
 		    TestRecord record = it2.next();
@@ -144,11 +143,15 @@ public class dbload
 		    bytestream.write(name);
 		}
 		writeBytes = bytestream.toByteArray();
-		byte[] paddingBytes = new byte[pagesize-writeBytes.length]; 
+		byte[] paddingBytes = new byte[pagesize+8-writeBytes.length]; 
 		os.write(writeBytes,0,writeBytes.length);
 		os.write(paddingBytes,0,paddingBytes.length);
-		//os.writeBytes(linetokens.get(0).length()+linetokens.get(0)+linetokens.get(1).length()+linetokens.get(1)+linetokens.get(2).length()+linetokens.get(2));
 	    }
+	    long endTime = System.currentTimeMillis();
+	    long duration = (endTime - startTime);
+	    System.out.println("Time taken in milliseconds: " + duration);
+	    System.out.println("Number of records inserted: " + numOfRecords);
+	    System.out.println("Numbeer of pages made: " + UnfilledPages.size());
 	    sc.close();
 	    os.close();
 	}

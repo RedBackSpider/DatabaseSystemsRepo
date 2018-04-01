@@ -19,7 +19,16 @@ public class TestPage
 	    }
         RecordList.add(record);
         this.bytesfilled += record.getByteSize();
+	this.RecordCount++;
 	return true;
+    }
+    public int getNumRecords()
+    {
+	return this.RecordCount;
+    }
+    public void setNumRecords(int num)
+    {
+	this.RecordCount = num;
     }
     public TestRecord getRecord(int index)
     {
