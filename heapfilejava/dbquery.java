@@ -132,7 +132,7 @@ public class dbquery
 			byte[] slice16 = Arrays.copyOfRange(buffer, buffset, buffset + 8); // read status length from file
 		        long bnabn = byteToLong(slice16);
 			buffset = buffset + 8;
-			System.out.println(bnabn);
+			
 			String bnnamelower = bnname.toLowerCase();
 		        
 			if(bnnamelower.contains(textQuery))
@@ -140,11 +140,11 @@ public class dbquery
 			    RecordFound = true;
 			    if(bnabn != -1)
 				{
-				    System.out.println("BN_REG_NAME" + regname + "BN_NAME: " + bnname + " BN_STATUS: " + bnstatus + " BN_REG_DATE: " + bnregdt + "BN_CANCEL_DT: " + bncanceldt + " BN_RENEW_DT: " + bnrenewdt + " BN_STATE_NUM: " + bnstatenum + "BN_STATE_REG: " + bnstatereg + " BN_ABN: " + bnabn);
+				    System.out.println("BN_REG_NAME: " + regname + "\nBN_NAME: " + bnname + "\nBN_STATUS: " + bnstatus + "\nBN_REG_DATE: " + bnregdt + "\nBN_CANCEL_DT: " + bncanceldt + "\nBN_RENEW_DT: " + bnrenewdt + "\nBN_STATE_NUM: " + bnstatenum + "\nBN_STATE_REG: " + bnstatereg + "\nBN_ABN: " + bnabn);
 				}
 			    else
 				{
-				    System.out.println("BN_REG_NAME" + regname + "BN_NAME: " + bnname + " BN_STATUS: " + bnstatus + " BN_REG_DATE: " + bnregdt + "BN_CANCEL_DT: " + bncanceldt + " BN_RENEW_DT: " + bnrenewdt + " BN_STATE_NUM: " + bnstatenum + "BN_STATE_REG: " + bnstatereg + " BN_ABN: ");
+				    System.out.println("BN_REG_NAME: " + regname + "\nBN_NAME: " + bnname + "\nBN_STATUS: " + bnstatus + "\nBN_REG_DATE: " + bnregdt + "\nBN_CANCEL_DT: " + bncanceldt + "\nBN_RENEW_DT: " + bnrenewdt + "\nBN_STATE_NUM: " + bnstatenum + "\nBN_STATE_REG: " + bnstatereg + "\nBN_ABN: ");
 				}
 			}
 			recnum++;
@@ -175,7 +175,7 @@ public class dbquery
     }
     public static long byteToLong(byte[] slice)
     {
-	long num = ((slice[0] & 0xFF) << 56) | ((slice[1] & 0xFF) << 48) | ((slice[2] & 0xFF) << 40) | ((slice[3] & 0xFF) << 32) | ((slice[4] & 0xFF) << 24) | ((slice[5] & 0xFF) << 16) | ((slice[6] & 0xFF) << 8) | (slice[7] & 0xFF);
+	long num = ((slice[0] & 0xFFL) << 56) | ((slice[1] & 0xFFL) << 48) | ((slice[2] & 0xFFL) << 40) | ((slice[3] & 0xFFL) << 32) | ((slice[4] & 0xFFL) << 24) | ((slice[5] & 0xFFL) << 16) | ((slice[6] & 0xFFL) << 8) | (slice[7] & 0xFFL);
 	return num;
     }
 }
