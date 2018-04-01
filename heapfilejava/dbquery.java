@@ -20,7 +20,7 @@ public class dbquery
 	try
 	{
 	    pagesize = Integer.parseInt(args[0]);
-	    textQuery = args[1];
+	    textQuery = args[1].toLowerCase();
 	    numFound = true;
 	}
 	catch(NumberFormatException e)  
@@ -32,7 +32,7 @@ public class dbquery
 	    try
 	    {
 		pagesize = Integer.parseInt(args[1]);
-		textQuery = args[0];
+		textQuery = args[0].toLowerCase();;
 	    }
         catch(NumberFormatException e)
 	    {
@@ -50,19 +50,49 @@ public class dbquery
 		long startTime = System.currentTimeMillis();
 		long numOfRecords = 0;
 		byte[] buffer = new byte[pagesize + 8];
-		int offset = 0;
-		int len = pagesize;
+		int offset = 0; // Offset for each page
+		int buffset = 0; // Offset within page, for each record
+		int len = pagesize + 8; // length of a page + 8 is read (includes number of records
 		int reccount = 0;
 		TestRecord correctRecord; // record to be assigned
 		boolean RecordFound = false;
-		while((is.read(buffer,offset,len + 4)) != -1 && !RecordFound) //While there are still bytes to be found and a record has not been found
+		while((is.read(buffer,offset,len)) != -1 && !RecordFound) //While there are still bytes to be found and a record has not been found
 		{
 		    byte[] slice = Arrays.copyOfRange(buffer, 0, 8);
-		    System.out.println(buffer);
 		    reccount = ((slice[0] & 0xFF) << 56) | ((slice[1] & 0xFF) << 48)
 			| ((slice[2] & 0xFF) << 40) | ((slice[3] & 0xFF) << 32) | ((slice[4] & 0xFF) << 24) | ((slice[5] & 0xFF) << 16)
 			| ((slice[6] & 0xFF) << 8) | (slice[7] & 0xFF);
-		    break;
+		    int recnum = 0;
+		    buffset = 8;
+		    while(recnum < reccount) // For each record
+		    {
+			byte[] slice1 = Arrays.copyOfRange(buffer, buffset, buffset + 2); // Read 2 bytes from 
+			String id = new String(slice1);
+			buffset = buffset + 2;
+			
+			byte[] slice2 = Arrays.copyOfRange(buffer, buffset, buffset + 2);
+			String code = new String(slice2);
+			buffset = buffset + 2;
+			
+			byte[] slice3 = Arrays.copyOfRange(buffer, buffset, buffset + 4);
+			int countrylength = ((slice3[0] & 0xFF) << 24) | ((slice3[1] & 0xFF) << 16)
+			    | ((slice3[2] & 0xFF) << 8) | (slice3[3] & 0xFF);
+			
+			buffset = buffset + 4;
+			byte[] slice4 = Arrays.copyOfRange(buffer, buffset, buffset + countrylength);
+		        String name = new String(slice4);
+			name = name.toLowerCase();
+			
+			buffset = buffset +countrylength;
+			if(name.contains(textQuery))
+			{
+			    RecordFound = true;
+			    System.out.println("ID: " + id + " Code: " + code + " Name: " + name);
+			}
+			recnum++;
+			//System.out.println(recnum);
+		    }
+		    //break;
 		    /*ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
 		    for(int i = 0; i < linetokens.size(); i++)
 		    {
@@ -105,7 +135,6 @@ public class dbquery
                       abn = Long.parseLong(linetokens.get(8));
 		      }*/
 		}
-		System.out.println(reccount);
 		is.close();
 		/*
 		    Iterator<TestPage> it = UnfilledPages.iterator();
