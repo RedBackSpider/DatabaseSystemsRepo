@@ -3,6 +3,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.io.File;
 import java.util.Arrays;
+import java.lang.Long;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.DataOutputStream;
@@ -51,18 +52,26 @@ public class dbload
 	    System.exit(0);
 	}
 	String outputname = "heap." + ps;
-	ArrayList<TestPage> UnfilledPages = new ArrayList<>();
+	ArrayList<HFPage> UnfilledPages = new ArrayList<>();
 	try
 	{
 	    Scanner sc = new Scanner(new File(filename));
 	    DataOutputStream os = new DataOutputStream(new FileOutputStream(outputname));
 	    long startTime = System.currentTimeMillis();
 	    long numOfRecords = 0;
-	    while(sc.hasNextLine())
+	    sc.nextLine(); // Skip first line
+	    while(sc.hasNextLine() && numOfRecords < 100)
 	    {
 		String line = sc.nextLine();
-		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split(",", -1)));
+		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
 		System.out.println(line.length());
+		if(linetokens.size() != 9)
+		{
+		    System.out.println("Wrong number of tokens");
+		    sc.close();
+		    os.close();
+		    System.exit(0);
+		}
 		for(int i = 0; i < linetokens.size(); i++)
 		{
 		    if(linetokens.get(i).charAt(0) == '"')
@@ -74,7 +83,16 @@ public class dbload
 			linetokens.set(i, linetokens.get(i).substring(0,linetokens.get(i).length()-1));
 		    }
 		}
-		TestRecord test = new TestRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2));
+		if (linetokens.get(8).isLong())
+		{
+		    System.out.println("Last Token is not a Long value");
+		    sc.close();
+		    os.close();
+		    System.exit(0);
+		}
+		long abn = Long.parseLong(linetokens.get(8));
+		//TestRecord test = new TestRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2));
+		HFRecord test = HFRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2), linetokens.get(3), linetokens.get(4), linetokens.get(5), linetokens.get(6), linetokens.get(7));
 		if(test.getByteSize() > pagesize)
 		{
 		    System.out.println("Record cannot fit into page structure, increase page size");
@@ -82,54 +100,55 @@ public class dbload
 		    os.close();
 		    System.exit(0);
 		}
-		Iterator<TestPage> iter = UnfilledPages.iterator();
+		Iterator<HFPage> iter = UnfilledPages.iterator();
 		boolean inserted = false;
 		while (iter.hasNext() && !inserted)
 		{
-		    TestPage page = iter.next();
+		    HFPage page = iter.next();
 		    inserted = page.insertRecord(test);
 		}
 		if(!inserted)
 		{
-		    TestPage page = new TestPage(pagesize);
+		    HFPage page = new HFPage(pagesize);
 		    page.insertRecord(test);
 		    UnfilledPages.add(page);
 		}
-		Collections.sort(UnfilledPages, new Comparator<TestPage>() {
-			public int compare(TestPage p1, TestPage p2) {
+		Collections.sort(UnfilledPages, new Comparator<HFPage>() {
+			public int compare(HFPage p1, HFPage p2) {
 			    return p2.getBytesFilled() - p1.getBytesFilled();
 			}
 		});
 		numOfRecords++;
-		
-		/*if(linetokens.get(8).length() != 0)
-		  {
-		      abn = Long.parseLong(linetokens.get(8));
-		  }*/
 	    }
-	    Iterator<TestPage> it = UnfilledPages.iterator();
+	    Iterator<HFPage> it = UnfilledPages.iterator();
 	    while(it.hasNext())
 	    {
-		TestPage page = it.next();
-		System.out.println("New Page Bytes:" + page.getBytesFilled());
-		System.out.println("New Page Record Count:" + page.getNumRecords());
-		ArrayList<TestRecord> records = page.getRecords();
-		Iterator<TestRecord> it2 = records.iterator();
+		HFPage page = it.next();
 		int pageByteCount = page.getBytesFilled();
+		long pageNumRecords = page.getNumRecords();
+		System.out.println("New Page Bytes:" + pageByteCount);
+		System.out.println("New Page Record Count:" + pageNumRecords);
+		ArrayList<HFRecord> records = page.getRecords();
+		Iterator<HFRecord> it2 = records.iterator();
 		ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
-		long nr = page.getNumRecords();
 	        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-		buffer.putLong(nr);
-		byte[] writeBytes = new byte[pagesize];
+		buffer.putLong(pageNumRecords);
+		byte[] writeBytes;
 		bytestream.write(buffer.array());
 		while(it2.hasNext())
 		{
-		    TestRecord record = it2.next();
+		    HFRecord record = it2.next();
 		    byte[] recordBytes;
-		    //System.out.println(record.getID());
-		    //System.out.println(record.getCode());
-		    //System.out.println(record.getName());
-		    byte[] id = record.getID().getBytes();
+		    byte[] registername;
+		    byte[] bnname;
+		    byte[] bnstatus;
+		    byte[] bnregdate;
+		    byte[] bncanceldate;
+		    byte[] bnrenewdate;
+    		    byte[] bndate;
+
+
+		    /*byte[] id = record.getID().getBytes();
 		    byte[] code = record.getCode().getBytes();
 		    byte[] name = record.getName().getBytes();
 		    byte[] namelength = new byte[4];
@@ -141,7 +160,7 @@ public class dbload
 		    bytestream.write(id);
 		    bytestream.write(code);
 		    bytestream.write(namelength);
-		    bytestream.write(name);
+		    bytestream.write(name);*/
 		}
 		writeBytes = bytestream.toByteArray();
 		byte[] paddingBytes = new byte[pagesize+8-writeBytes.length]; 
@@ -164,5 +183,17 @@ public class dbload
 	{
 	    e.printStackTrace();
 	}
+    }
+    public boolean isLong(String number)
+    {
+	try
+	{
+	    long l = Long.parseLong(number);
+	}
+	catch(NumberFormatException e)
+	{
+	    return false;
+	}
+	return true;
     }
 }

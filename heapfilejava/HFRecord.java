@@ -2,7 +2,7 @@ public class HFRecord
 {
     String bn_name;
     String register_name;
-    String bn_state;
+    String bn_status;
     String bn_reg_dt;
     String bn_cancel_dt;
     String bn_renew_dt;
@@ -10,11 +10,11 @@ public class HFRecord
     String bn_state_of_reg;
     Long bn_abn;
     int bytesize = 0;
-    public HFRecord(String nbn_name, String nregister_name, String nbn_state, String nbn_reg_dt,String nbn_cancel_dt,String nbn_renew_dt,String nbn_state_num, String nbn_state_of_reg, Long nbn_abn)
+    public HFRecord(String nregister_name, String nbn_name, String nbn_status, String nbn_reg_dt,String nbn_cancel_dt,String nbn_renew_dt,String nbn_state_num, String nbn_state_of_reg, Long nbn_abn)
     {
 	this.bn_name = nbn_name;
 	this.register_name = nregister_name;
-	this.bn_state = nbn_state;
+	this.bn_status = nbn_status;
 	this.bn_reg_dt = nbn_reg_dt;
 	this.bn_cancel_dt = nbn_cancel_dt;
 	this.bn_renew_dt = nbn_renew_dt;
@@ -43,9 +43,9 @@ public class HFRecord
     {
 	return this.register_name.length();
     }
-    public String getState()
+    public String getStatus()
     {
-	return this.bn_state;
+	return this.bn_status;
     }
     public int getStateSize()
     {
