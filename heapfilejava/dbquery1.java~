@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.io.DataInputStream;
-import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,7 +21,6 @@ public class dbquery
 	{
 	    pagesize = Integer.parseInt(args[0]);
 	    textQuery = args[1].toLowerCase();
-	    textQuery = textQuery.replaceAll("^\"|\"$", "");
 	    numFound = true;
 	}
 	catch(NumberFormatException e)  
@@ -34,8 +32,7 @@ public class dbquery
 	    try
 	    {
 		pagesize = Integer.parseInt(args[1]);
-		textQuery = args[0].toLowerCase();
-		textQuery = textQuery.replaceAll("^\"|\"$", "");
+		textQuery = args[0].toLowerCase();;
 	    }
         catch(NumberFormatException e)
 	    {
@@ -49,53 +46,51 @@ public class dbquery
 	ArrayList<TestPage> UnfilledPages = new ArrayList<>();
         try
 	    {
-		FileInputStream is = new FileInputStream(inputname);
+		DataInputStream is = new DataInputStream(new FileInputStream(inputname));
 		long startTime = System.currentTimeMillis();
 		long numOfRecords = 0;
-		long numOfPages = 0;
+		byte[] buffer = new byte[pagesize + 8];
 		int offset = 0; // Offset for each page
 		int buffset = 0; // Offset within page, for each record
 		int len = pagesize + 8; // length of a page + 8 is read (includes number of records
-		byte[] buffer = new byte[len];
-		long reccount = 0;
+		int reccount = 0;
 		TestRecord correctRecord; // record to be assigned
 		boolean RecordFound = false;
-		while((len = is.read(buffer)) != -1 && !RecordFound) //While there are still bytes to be found and a record has not been found
+		while((is.read(buffer,offset,len)) != -1 && !RecordFound) //While there are still bytes to be found and a record has not been found
 		{
-		    numOfPages++;
 		    byte[] slice = Arrays.copyOfRange(buffer, 0, 8);
 		    reccount = byteToLong(slice);
 		    int recnum = 0;
 		    buffset = 8;
-		    while(recnum < reccount && !RecordFound) // For each record in the page
+		    while(recnum < reccount) // For each record in the page
 		    {
-			byte[] slice1 = Arrays.copyOfRange(buffer, buffset, buffset + 14); // Read BUSINESS NAMES from file
+			byte[] slice1 = Arrays.copyOfRange(buffer, buffset, buffset + 12); // Read BUSINESS NAMES from file
 			String regname = new String(slice1);
-			buffset = buffset + 14;
-
+			buffset = buffset + 12;
+			
 			byte[] slice2 = Arrays.copyOfRange(buffer, buffset, buffset + 4); // Read namelength to file
 			int namelength = byteToInt(slice2);
 			buffset = buffset + 4;
-
+			
 			byte[] slice3 = Arrays.copyOfRange(buffer, buffset, buffset + namelength); // read bnname from file
 		        String bnname = new String(slice3);
 			buffset = buffset + namelength;
-		    
+			
 			byte[] slice4 = Arrays.copyOfRange(buffer, buffset, buffset + 4); // read status length from file
 		        int statuslength = byteToInt(slice4);
 			buffset = buffset + 4;
 
 			byte[] slice5 = Arrays.copyOfRange(buffer, buffset, buffset + statuslength); // read bnstatus from file
-			String bnstatus = new String(slice5);
+			String bnname = new String(slice5);
 			buffset = buffset + statuslength;
 			
 			byte[] slice6 = Arrays.copyOfRange(buffer, buffset, buffset + 4); // read regdate length from file
 		        int reglength = byteToInt(slice6);
 			buffset = buffset + 4;
-			
+
 			byte[] slice7 = Arrays.copyOfRange(buffer, buffset, buffset + reglength); // read regdt from file
 			String bnregdt = new String(slice7);
-			buffset = buffset + reglength;
+			buffset = buffset + 10;
 			
 			byte[] slice8 = Arrays.copyOfRange(buffer, buffset, buffset + 4); // read cancel date length from file
 		        int cancellength = byteToInt(slice8);
@@ -122,7 +117,7 @@ public class dbquery
 			buffset = buffset + statenumlength;
 			
 			byte[] slice14 = Arrays.copyOfRange(buffer, buffset, buffset + 4); // read status length from file
-		        int statereglength = byteToInt(slice14);
+		        int statereglength = byteToInt(slice12);
 			buffset = buffset + 4;
 
 			byte[] slice15 = Arrays.copyOfRange(buffer, buffset, buffset + statereglength); // read bnstatus from file
@@ -130,37 +125,72 @@ public class dbquery
 			buffset = buffset + statereglength;
 			
 			byte[] slice16 = Arrays.copyOfRange(buffer, buffset, buffset + 8); // read status length from file
-		        long bnabn = byteToLong(slice16);
+		        long statuslength = byteToLong(slice14);
 			buffset = buffset + 8;
-			System.out.println(bnabn);
-			String bnnamelower = bnname.toLowerCase();
+
+			/*byte[] slice3 = Arrays.copyOfRange(buffer, buffset, buffset + 4);
+			int countrylength = ((slice3[0] & 0xFF) << 24) | ((slice3[1] & 0xFF) << 16)
+			    | ((slice3[2] & 0xFF) << 8) | (slice3[3] & 0xFF);
+			
+			buffset = buffset + 4;
+			
+			String name = new String(slice4);
+			*/String bnnamelower = bnname.toLowerCase();
 		        
-			if(bnnamelower.contains(textQuery))
+			if(name.contains(textQuery))
 			{
 			    RecordFound = true;
-			    if(bnabn != -1)
-				{
-				    System.out.println("BN_REG_NAME" + regname + "BN_NAME: " + bnname + " BN_STATUS: " + bnstatus + " BN_REG_DATE: " + bnregdt + "BN_CANCEL_DT: " + bncanceldt + " BN_RENEW_DT: " + bnrenewdt + " BN_STATE_NUM: " + bnstatenum + "BN_STATE_REG: " + bnstatereg + " BN_ABN: " + bnabn);
-				}
-			    else
-				{
-				    System.out.println("BN_REG_NAME" + regname + "BN_NAME: " + bnname + " BN_STATUS: " + bnstatus + " BN_REG_DATE: " + bnregdt + "BN_CANCEL_DT: " + bncanceldt + " BN_RENEW_DT: " + bnrenewdt + " BN_STATE_NUM: " + bnstatenum + "BN_STATE_REG: " + bnstatereg + " BN_ABN: ");
-				}
+			    System.out.println("BN_NAME: " + id + " BN_STATUS: " + code + " BN_REG_DATE: " + name + );
 			}
 			recnum++;
-			numOfRecords++;
 		    }
-		}
-		if(!RecordFound)
+		    if(!RecordFound)
 		    {
 			System.out.println("No record found");
 		    }
+		}
 		is.close();
-	        
+		/*
+		    Iterator<TestPage> it = UnfilledPages.iterator();
+		    while(it.hasNext())
+			{
+			TestPage page = it.next();
+			System.out.println("New Page Bytes:" + page.getBytesFilled());
+			ArrayList<TestRecord> records = page.getRecords();
+			Iterator<TestRecord> it2 = records.iterator();
+			int pageByteCount = page.getBytesFilled();
+			ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+			byte[] writeBytes = new byte[pagesize];
+			while(it2.hasNext())
+			    {
+				TestRecord record = it2.next();
+				byte[] recordBytes;
+				//System.out.println(record.getID());
+				//System.out.println(record.getCode());
+				//System.out.println(record.getName());
+				byte[] id = record.getID().getBytes();
+				byte[] code = record.getCode().getBytes();
+				byte[] name = record.getName().getBytes();
+				byte[] namelength = new byte[4];
+				int nl = record.getName().length();
+				namelength[0] = (byte) (nl >> 24);
+				namelength[1] = (byte) (nl >> 16);
+				namelength[2] = (byte) (nl >> 8);
+				namelength[3] = (byte) (nl);
+				bytestream.write(id);
+				bytestream.write(code);
+				bytestream.write(namelength);
+				bytestream.write(name);
+			    }
+			writeBytes = bytestream.toByteArray();
+			byte[] paddingBytes = new byte[pagesize-writeBytes.length];
+			os.write(writeBytes,0,writeBytes.length);
+			os.write(paddingBytes,0,paddingBytes.length);
+			}*/
 		long endTime = System.currentTimeMillis();
 		long duration = (endTime - startTime);
 		System.out.println("Time taken in milliseconds: " + duration);
-		System.out.println("Number of records searched: " + numOfRecords);
+		System.out.println("Number of records inserted: " + numOfRecords);
 		System.out.println("Number of pages searched: " + numOfPages);
 	    }
 	catch(IOException e)
@@ -168,14 +198,15 @@ public class dbquery
 		System.exit(0);
 	    }
     }
-    public static int byteToInt(byte[] slice)
+    public int static ByteToInt(byte[] slice)
     {
-	int num = ((slice[0] & 0xFF) << 24) | ((slice[1] & 0xFF) << 16) | ((slice[2] & 0xFF) << 8) | (slice[3] & 0xFF);
-	return num;
+	int num = ((slice[0] & 0xFF) << 24) | ((slice[1] & 0xFF) << 16) | ((slice[2] & 0xFF) << 8) | (slice[3] & 0xFF)
+	return num
     }
-    public static long byteToLong(byte[] slice)
+    public long static ByteToInt(byte[] slice)
     {
-	long num = ((slice[0] & 0xFF) << 56) | ((slice[1] & 0xFF) << 48) | ((slice[2] & 0xFF) << 40) | ((slice[3] & 0xFF) << 32) | ((slice[4] & 0xFF) << 24) | ((slice[5] & 0xFF) << 16) | ((slice[6] & 0xFF) << 8) | (slice[7] & 0xFF);
-	return num;
+	long num = ((slice[0] & 0xFF) << 56) | ((slice[1] & 0xFF) << 48) | ((slice[2] & 0xFF) << 40) | ((slice[3] & 0xFF) << 32) 
+	    | ((slice[4] & 0xFF) << 24) | ((slice[5] & 0xFF) << 16) | ((slice[6] & 0xFF) << 8) | (slice[7] & 0xFF)
+	return num
     }
 }

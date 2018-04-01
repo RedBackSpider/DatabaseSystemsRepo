@@ -21,7 +21,7 @@ public class HFRecord
 	this.bn_state_num = nbn_state_num;
 	this.bn_state_of_reg = nbn_state_of_reg;
 	this.bn_abn = nbn_abn;	
-	this.bytesize = this.getBNNameSize() + this.getRegNameSize() + this.getStateSize() + this.getRegDtSize() + this.getCancelDtSize() + this.getRenewDtSize() + this.getStateNumSize() + this.getStateRegSize() + this.bn_abn.SIZE;
+	this.bytesize = this.getBNNameSize() + this.getRegNameSize() + this.getStatusSize() + this.getRegDtSize() + this.getCancelDtSize() + this.getRenewDtSize() + this.getStateNumSize() + this.getStateRegSize() + 8 + 7 * 4; //longsize
     }
     public int getByteSize()
     {
@@ -47,11 +47,11 @@ public class HFRecord
     {
 	return this.bn_status;
     }
-    public int getStateSize()
+    public int getStatusSize()
     {
-	return this.bn_state.length();
+	return this.bn_status.length();
     }
-    public String getRegDT()
+    public String getRegDt()
     {
 	return this.bn_reg_dt;
     }

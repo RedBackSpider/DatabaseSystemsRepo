@@ -60,11 +60,10 @@ public class dbload
 	    long startTime = System.currentTimeMillis();
 	    long numOfRecords = 0;
 	    sc.nextLine(); // Skip first line
-	    while(sc.hasNextLine() && numOfRecords < 100)
+	    while(sc.hasNextLine() && numOfRecords < 2300)
 	    {
 		String line = sc.nextLine();
 		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
-		System.out.println(line.length());
 		if(linetokens.size() != 9)
 		{
 		    System.out.println("Wrong number of tokens");
@@ -74,6 +73,11 @@ public class dbload
 		}
 		for(int i = 0; i < linetokens.size(); i++)
 		{
+		    //System.out.println(linetokens.get(i) + " " + linetokens.get(i).length());
+		    if(linetokens.get(i).length() < 2)
+		    {
+			continue;
+		    }
 		    if(linetokens.get(i).charAt(0) == '"')
 		    {
 			linetokens.set(i, linetokens.get(i).substring(1,linetokens.get(i).length()));
@@ -83,17 +87,14 @@ public class dbload
 			linetokens.set(i, linetokens.get(i).substring(0,linetokens.get(i).length()-1));
 		    }
 		}
-		if (linetokens.get(8).isLong())
+		long abn = -1;
+		if(isLong(linetokens.get(8)))
 		{
-		    System.out.println("Last Token is not a Long value");
-		    sc.close();
-		    os.close();
-		    System.exit(0);
-		}
-		long abn = Long.parseLong(linetokens.get(8));
-		//TestRecord test = new TestRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2));
-		HFRecord test = HFRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2), linetokens.get(3), linetokens.get(4), linetokens.get(5), linetokens.get(6), linetokens.get(7));
-		if(test.getByteSize() > pagesize)
+		    abn = Long.parseLong(linetokens.get(8));
+		}		
+                HFRecord test = new HFRecord(linetokens.get(0), linetokens.get(1), linetokens.get(2), linetokens.get(3), linetokens.get(4), linetokens.get(5), linetokens.get(6), linetokens.get(7), abn);
+                //System.out.println(test.getByteSize());
+                if(test.getByteSize() > pagesize)
 		{
 		    System.out.println("Record cannot fit into page structure, increase page size");
 		    sc.close();
@@ -138,32 +139,63 @@ public class dbload
 		while(it2.hasNext())
 		{
 		    HFRecord record = it2.next();
-		    byte[] recordBytes;
-		    byte[] registername;
-		    byte[] bnname;
-		    byte[] bnstatus;
-		    byte[] bnregdate;
-		    byte[] bncanceldate;
-		    byte[] bnrenewdate;
-    		    byte[] bndate;
+		    byte[] registername = record.getRegName().getBytes();
+		    bytestream.write(registername);
+		    
+		    byte[] bnname = record.getBNName().getBytes();	
+		    int bnnamesize = record.getBNNameSize();
+		    byte[] namelength = intToByte(bnnamesize);
+		    bytestream.write(namelength);
+		    bytestream.write(bnname);
+		    
+		    byte[] bnstatus = record.getStatus().getBytes();
+		    int bnstatussize = record.getStatusSize();
+		    byte[] statuslength = intToByte(bnstatussize);
+		    bytestream.write(statuslength);
+		    bytestream.write(bnstatus);
+		    
+		    byte[] bnregdate = record.getRegDt().getBytes();
+		    int bnregdatesize = record.getRegDtSize();
+		    byte[] reglength = intToByte(bnregdatesize);
+		    bytestream.write(reglength);
+		    bytestream.write(bnregdate);
 
+		    byte[] bncanceldate = record.getCancelDt().getBytes();
+		    int bncanceldatesize = record.getCancelDtSize();
+		    byte[] cancellength = intToByte(bncanceldatesize);
+		    bytestream.write(cancellength);
+		    bytestream.write(bncanceldate);
 
-		    /*byte[] id = record.getID().getBytes();
-		    byte[] code = record.getCode().getBytes();
-		    byte[] name = record.getName().getBytes();
-		    byte[] namelength = new byte[4];
-		    int nl = record.getName().length();
-		    namelength[0] = (byte) (nl >> 24);
-		    namelength[1] = (byte) (nl >> 16);
-		    namelength[2] = (byte) (nl >> 8);
-		    namelength[3] = (byte) (nl);
+		    byte[] bnrenewdate = record.getRenewDt().getBytes();
+		    int bnrenewdatesize = record.getRenewDtSize();
+		    byte[] renewlength = intToByte(bnrenewdatesize);
+		    bytestream.write(renewlength);
+		    bytestream.write(bnrenewdate);
+
+		    byte[] bnstatenum = record.getStateNum().getBytes();
+    		    int bnstatenumsize = record.getStateNumSize();
+		    byte[] statenumlength = intToByte(bnstatenumsize);
+		    bytestream.write(statenumlength);
+		    bytestream.write(bnstatenum);
+    		    
+		    byte[] bnstatereg = record.getStateReg().getBytes();
+    		    int bnstateregsize = record.getStateRegSize();
+		    byte[] statereglength = intToByte(bnstateregsize);
+		    bytestream.write(statereglength);
+		    bytestream.write(bnstatereg);
+		    
+		    long abn = record.getABN();
+		    byte[] abnbyte = longToByte(abn);
+		    bytestream.write(abnbyte);
+		    /*
 		    bytestream.write(id);
 		    bytestream.write(code);
 		    bytestream.write(namelength);
 		    bytestream.write(name);*/
 		}
 		writeBytes = bytestream.toByteArray();
-		byte[] paddingBytes = new byte[pagesize+8-writeBytes.length]; 
+		System.out.println(writeBytes.length);
+		byte[] paddingBytes = new byte[pagesize+8-writeBytes.length];
 		os.write(writeBytes,0,writeBytes.length);
 		os.write(paddingBytes,0,paddingBytes.length);
 	    }
@@ -184,7 +216,7 @@ public class dbload
 	    e.printStackTrace();
 	}
     }
-    public boolean isLong(String number)
+    public static boolean isLong(String number)
     {
 	try
 	{
@@ -195,5 +227,27 @@ public class dbload
 	    return false;
 	}
 	return true;
+    }
+    public static byte[] intToByte(int length)
+    {
+    	byte[] blength = new byte[4];
+	blength[0] = (byte) (length >> 24);
+	blength[1] = (byte) (length >> 16);
+	blength[2] = (byte) (length >> 8);
+	blength[3] = (byte) (length);
+	return blength;
+    }
+    public static byte[] longToByte(long x)
+    {
+    	byte[] barray = new byte[8];
+	barray[0] = (byte) (x >> 56);
+	barray[1] = (byte) (x >> 48);
+	barray[2] = (byte) (x >> 40);
+	barray[3] = (byte) (x >> 32);
+	barray[4] = (byte) (x >> 24);
+	barray[5] = (byte) (x >> 16);
+	barray[6] = (byte) (x >> 8);
+	barray[7] = (byte) (x);
+	return barray;
     }
 }
