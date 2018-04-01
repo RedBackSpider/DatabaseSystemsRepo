@@ -63,7 +63,7 @@ public class dbload
 	    sc.readLine(); // Do not use first line
 	    String line = sc.readLine();
 	    long num = 0;
-	    while(line != null && num < 2200)
+	    while(line != null)
 	    {
 		num++;
 		if(num%200000 == 0)
