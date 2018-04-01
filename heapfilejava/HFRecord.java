@@ -9,7 +9,8 @@ public class HFRecord
     String bn_state_num;
     String bn_state_of_reg;
     Long bn_abn;
-    public heapfilejava(String nbn_name, String nregister_name, String nbn_state, String nbn_reg_dt,String nbn_cancel_dt,String nbn_renew_dt,String nbn_state_num, String bn_state_of_reg, Long bn_abn)
+    int bytesize = 0;
+    public HFRecord(String nbn_name, String nregister_name, String nbn_state, String nbn_reg_dt,String nbn_cancel_dt,String nbn_renew_dt,String nbn_state_num, String nbn_state_of_reg, Long nbn_abn)
     {
 	this.bn_name = nbn_name;
 	this.register_name = nregister_name;
@@ -20,73 +21,78 @@ public class HFRecord
 	this.bn_state_num = nbn_state_num;
 	this.bn_state_of_reg = nbn_state_of_reg;
 	this.bn_abn = nbn_abn;	
+	this.bytesize = this.getBNNameSize() + this.getRegNameSize() + this.getStateSize() + this.getRegDtSize() + this.getCancelDtSize() + this.getRenewDtSize() + this.getStateNumSize() + this.getStateRegSize() + this.bn_abn.SIZE;
+    }
+    public int getByteSize()
+    {
+	return this.bytesize;
     }
     public String getBNName()
     {
-	return bn_name;
+	return this.bn_name;
     }
-    public String getBNNameSize()
+    public int getBNNameSize()
     {
-	return bn_name.length();
-    }
-    public String getRegName()
-    {
-	return register_name;
+	return this.bn_name.length();
     }
     public String getRegName()
     {
-	return register_name.length();
+	return this.register_name;
+    }
+    public int getRegNameSize()
+    {
+	return this.register_name.length();
     }
     public String getState()
     {
-	return bn_state;
+	return this.bn_state;
     }
-    public String getState()
+    public int getStateSize()
     {
-	return bn_state.length();
+	return this.bn_state.length();
     }
     public String getRegDT()
     {
-	return bn_reg_dt;
+	return this.bn_reg_dt;
     }
-    public String getRenewDt()
+    public int getRegDtSize()
     {
-	return bn_reg_dt.length();
+	return this.bn_reg_dt.length();
     }
     public String getCancelDt()
     {
-	return bn_cancel_dt;
+	return this.bn_cancel_dt;
+    }
+    public int getCancelDtSize()
+    {
+	return this.bn_cancel_dt.length();
     }
     public String getRenewDt()
     {
-	return bn_cancel_dt.length();
+	return this.bn_renew_dt;
     }
-    public String getRenewDt()
+    public int getRenewDtSize()
     {
-	return bn_renew_dt;
-    }
-    public String getRenewDt()
-    {
-	return bn_renew_dt.length();
+	return this.bn_renew_dt.length();
     }
     public String getStateNum()
     {
-	return bn_state_num;
+	return this.bn_state_num;
     }
-    public String getStateNum()
+    public int getStateNumSize()
     {
-	return bn_state_num.length();
-    }
-    public String getStateReg()
-    {
-	return bn_state_of_reg;
+	return this.bn_state_num.length();
     }
     public String getStateReg()
     {
-	return bn_state_of_reg.length();
+	return this.bn_state_of_reg;
     }
-    public String getStateReg()
+    public int getStateRegSize()
     {
-	return bn_abn;
+	return this.bn_state_of_reg.length();
+    }
+    public Long getABN()
+    {
+	return this.bn_abn;
     }
 }

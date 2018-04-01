@@ -66,14 +66,10 @@ public class DerbyDBBulk
 		String csvFile1 = "/home/ec2-user/BUSINESS_NAMES_201803.csv";
 		Scanner sc = new Scanner(new File(csvFile1));
 		sc.nextLine();
-		int count = 0;
 		while(sc.hasNextLine())
 		{
-		    count++;
 		    String line = sc.nextLine();
-		    StringTokenizer st = new StringTokenizer(line, "\t");
 		    int id = 0;
-		    int tokenCount = 0;
 		    ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
 		    idcount++;
 		    long abn = 0;
