@@ -18,7 +18,28 @@ public class HFPage
 	}
 	RecordList.add(record);
 	this.bytesfilled += record.getByteSize();
+	this.RecordCount++;
 	return true;
+    }
+    public int getNumRecords()
+    {
+	return this.RecordCount;
+    }
+    public void setNumRecords(int num)
+    {
+	this.RecordCount = num;
+    }
+    public HFRecord getRecord(int index)
+    {
+	return this.RecordList.get(index);
+    }
+    public int getBytesFilled()
+    {
+	return this.bytesfilled;
+    }
+    public ArrayList<HFRecord> getRecords()
+    {
+	return this.RecordList;
     }
     public boolean checkEqualPageSize()
     {

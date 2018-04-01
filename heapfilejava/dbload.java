@@ -61,7 +61,8 @@ public class dbload
 	    while(sc.hasNextLine())
 	    {
 		String line = sc.nextLine();
-		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split("\t", -1)));
+		ArrayList<String> linetokens = new ArrayList<String>(Arrays.asList(line.split(",", -1)));
+		System.out.println(line.length());
 		for(int i = 0; i < linetokens.size(); i++)
 		{
 		    if(linetokens.get(i).charAt(0) == '"')
